@@ -2,12 +2,11 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from openai import OpenAI
 
-
 from classes import UserInput
 from chat_functions import build_content
 
-
 load_dotenv()
+
 
 app = FastAPI()
 client = OpenAI()
@@ -22,11 +21,21 @@ async def user_question(input: UserInput):
 
     response = client.responses.create(
         model="gpt-5-nano",
-        # instructions="Talk like a pirate.", #! AQUÍ VA EL MASTER PROMPT
-        input=[{
-            "role": "user",
-            "content": content
-        }],
+        input=[
+            # {
+            #     "role": "system",
+            #     "content": [
+            #         {
+            #             "type": "input_text",
+            #             "text": "Eres un asistente virtual llamado ServiGuia ..." #! AQUÍ VA EL MASTER PROMPT
+            #         }
+            #      ]
+            # },
+            {
+                "role": "user",
+                "content": content
+            }
+        ],
     )
 
     # TODO: Aquí se llamará a la función que se haga que devuelva la lista de proveedores a mostrar (NO LA LLAMADA A LA BASE DE DATOS,
