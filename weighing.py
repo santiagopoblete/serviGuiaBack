@@ -77,23 +77,22 @@ user_needs.user_price_range = (1000, 3000)
 user_needs.user_due_date = dt.datetime.now() + dt.timedelta(days=6)
 
 providers = []
-providersScores = []
+providers_scores = []
 
 for i in range(100):
     provider = Provider()
-    provider.overall_rating = random.uniform(1.0, 5.0)
+    provider.overall_rating = round(float(random.uniform(1.0, 5.0)), 2)
     provider.rating_count = random.randint(0, 150)
     provider.badge_count = random.randint(0, 5)
     provider.price_range = (random.randint(500, 2000), random.randint(1500, 5000))
 
     providers.append(provider)
-    providersScores.append(calculate_provider_score(provider, user_needs))
+    providers_scores.append(calculate_provider_score(provider, user_needs))
 
-providers_with_scores = list(zip(providers, providersScores))
+providers_with_scores = list(zip(providers, providers_scores))
 providers_with_scores.sort(key=lambda x: x[1], reverse=True)
 
-for provider, score in providers_with_scores[:10]:  # Top 10 providers
-    print(f"Provider: {provider}, Score: {score}")
-
+for provider, score in providers_with_scores:
+    print(f"Provider with rating {provider.overall_rating}, rating count {provider.rating_count}, badge count {provider.badge_count}, price range {provider.price_range} has a score of {score:.2f}")
 
 
