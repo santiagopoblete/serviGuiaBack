@@ -24,6 +24,10 @@ source .venv/bin/activate
 ### Instalar dependencias y paquetes
 `pip install -r requirements.txt`
 
+### Crear .env
+En el folder raíz de tu proyecto, crear un archivo .env. Dentro de este archivo incluir lo siguiente:
+`OPENAI_API_KEY=stringDeAPIkey`
+
 ## Al trabajar
 ### Correr el servidor
 Correr el siguiente comando en la terminal:
