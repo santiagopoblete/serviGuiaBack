@@ -88,4 +88,4 @@ async def run(use_db: bool = False):
 
 
 if __name__ == "__main__":
-    asyncio.run(run(use_db=False))  # Switch to True to load from MongoDB
+    asyncio.run(run(use_db=True))  # Switch to True to load from MongoDB
