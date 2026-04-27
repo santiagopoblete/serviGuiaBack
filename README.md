@@ -28,6 +28,9 @@ source .venv/bin/activate
 En el folder raíz de tu proyecto, crear un archivo .env. Dentro de este archivo incluir lo siguiente:
 `OPENAI_API_KEY=stringDeAPIkey`
 
+### Adjuntar master_prompt.txt
+En el folder raíz de tu proyecto, subir el archivo master_prompt.txt compartido contigo. Este archivo incluye el comportamiento deseado del modelo de IA.
+
 ## Al trabajar
 ### Correr el servidor
 Correr el siguiente comando en la terminal:
@@ -36,7 +39,10 @@ Correr el siguiente comando en la terminal:
 ### Instalar nuevas dependencias y paquetes
 Si se instalarán nuevos paquetes, es importante actualizar el archivo de requirements.txt.
 Para hacer esto, correr el siguiente comando en la terminal una vez instaladas todas las dependencias nuevas:
-`pip freeze > requirements.txt`
+```
+pip install -r requirements.txt
+pip freeze > requirements.txt
+```
 
 ## Al terminar de trabajar
 ### Detener el servidor

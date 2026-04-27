@@ -1,19 +1,18 @@
+import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from openai import OpenAI
 
-from classes import UserInput
-from chat_functions import build_content
-
-from .routers import workers
-from .database import get_db
-from contextlib import asynccontextmanager
-
+from classes.chat_classes import UserInput
+from classes.chat_classes import AIResponse
+from functions.chat_functions import build_content, load_master_prompt
 
 load_dotenv()
 
-app = FastAPI(title="ServiGuia API", lifespan=lifespan)
+
+app = FastAPI()
 client = OpenAI()
+MASTER_PROMPT = load_master_prompt()
 
 @app.get("/")
 async def read_root():
@@ -23,36 +22,19 @@ async def read_root():
 async def user_question(input: UserInput):
     content = build_content(input)
 
-    response = client.responses.create(
+    response = client.responses.parse(
         model="gpt-5-nano",
-        # instructions="Talk like a pirate.", #! AQUÍ VA EL MASTER PROMPT
-        input=[{
-            "role": "user",
-            "content": content
-        }],
+        instructions=MASTER_PROMPT,
+        input=[
+            {
+                "role": "user",
+                "content": content
+            }
+        ],
+        text_format=AIResponse,
     )
 
     # TODO: Aquí se llamará a la función que se haga que devuelva la lista de proveedores a mostrar (NO LA LLAMADA A LA BASE DE DATOS,
     # TODO:  SINO YA DESPUES DE ESCOGER LAS RECOMENDACIONES DE PROVEEDORES) y se agregará a la respuesta del modelo (response.output_text).
 
-    return response.output_text # TODO: Mientras se hace la función anterior, se devuelve la respuesta del modelo, pero debe regresar la lista de proveedores.
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    db = client["services_db"]
-    await db.workers.create_index("categorias")
-    await db.workers.create_index("disponible")
-    await db.workers.create_index("calificacion_global")
-    
-    yield  # App runs here
-    
-    # Shutdown
-    client.close()
-
-app.include_router(workers.router)
-
-@app.get("/")
-async def root():
-    return {"status": "ok"}
+    return response.output_parsed # TODO: Mientras se hace la función anterior, se devuelve la respuesta del modelo, pero debe regresar la lista de proveedores tambien.
