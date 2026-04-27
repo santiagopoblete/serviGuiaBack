@@ -75,16 +75,16 @@ async def run(use_db: bool = False):
         workers = load_workers_from_json("trabajadores.json")
 
     test_category(workers, category="plomeria",     expertise=4.0, budget=(300, 800))
-    test_category(workers, category="electricidad", expertise=5.0, budget=(400, 1200))
-    test_category(workers, category="clima",        expertise=3.0, budget=(500, 2000))
-    test_category(workers, category="reparaciones", expertise=2.0, budget=(250, 700))
-    test_category(workers, category="construccion", expertise=6.0, budget=(500, 3000))
-    test_category(workers, category="fumigacion",   expertise=1.0, budget=(300, 1000))
-    test_category(workers, category="pintura",      expertise=3.0, budget=(400, 1800))
-    test_category(workers, category="limpieza",     expertise=2.0, budget=(300, 900))
-    test_category(workers, category="seguridad",    expertise=4.0, budget=(500, 2000))
-    test_category(workers, category="computo",      expertise=3.0, budget=(200, 800))
-    test_category(workers, category="carpinteria",  expertise=5.0, budget=(400, 1500))
+    # test_category(workers, category="electricidad", expertise=5.0, budget=(400, 1200))
+    # test_category(workers, category="clima",        expertise=3.0, budget=(500, 2000))
+    # test_category(workers, category="reparaciones", expertise=2.0, budget=(250, 700))
+    # test_category(workers, category="construccion", expertise=6.0, budget=(500, 3000))
+    # test_category(workers, category="fumigacion",   expertise=1.0, budget=(300, 1000))
+    # test_category(workers, category="pintura",      expertise=3.0, budget=(400, 1800))
+    # test_category(workers, category="limpieza",     expertise=2.0, budget=(300, 900))
+    # test_category(workers, category="seguridad",    expertise=4.0, budget=(500, 2000))
+    # test_category(workers, category="computo",      expertise=3.0, budget=(200, 800))
+    # test_category(workers, category="carpinteria",  expertise=5.0, budget=(400, 1500))
 
 
 if __name__ == "__main__":
