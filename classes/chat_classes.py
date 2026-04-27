@@ -10,6 +10,14 @@ class UrgencyLevel(str, Enum):
     MODERADO = "MODERADO"
     NORMAL = "NORMAL"
 
+class PriceRange(BaseModel):
+    min: int
+    max: int
+
+class UserNeeds(BaseModel):
+    user_expected_expertise: float = 0.0 # Valor entre 0 y 5
+    user_price_range: PriceRange = PriceRange(min=0, max=0)
+
 class AIResponse(BaseModel):
     nivel_urgencia: UrgencyLevel
     es_emergencia: bool
@@ -18,4 +26,6 @@ class AIResponse(BaseModel):
     pregunta_seguimiento: str | None = None # Solo proveer si el input del usuario es ambiguo
     resumen_diagnostico: str
     numero_emergencia: str | None = None
+    pregunta_necedidades_usuario: str | None = None # Solo proveer si el input del usuario no es suficiente para entender sus necesidades (por ejemplo, si no se especifica un rango de precios o nivel de experiencia esperado)
+    necesidades_usuario: UserNeeds # Este campo no será parte del output a devolver al usuario, sino que se usará internamente para el sistema de recomendación.
     # proveedores_sugeridos será agregado después de correr el sistema de recomendación

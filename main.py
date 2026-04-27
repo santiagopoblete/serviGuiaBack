@@ -3,15 +3,16 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from openai import OpenAI
 
-from classes import UserInput
-from classes import AIResponse
-from chat_functions import build_content
+from classes.chat_classes import UserInput
+from classes.chat_classes import AIResponse
+from functions.chat_functions import build_content, load_master_prompt
 
 load_dotenv()
 
 
 app = FastAPI()
 client = OpenAI()
+MASTER_PROMPT = load_master_prompt()
 
 @app.get("/")
 async def read_root():
@@ -23,7 +24,7 @@ async def user_question(input: UserInput):
 
     response = client.responses.parse(
         model="gpt-5-nano",
-        # instructions="Eres un asistente de deteccion de emergencias en el hogar. Si la situación es una emergencia, identifícala. Si no lo es, clasifícala en una categoría de acuerdo al servicio requerido para solucionarla.", #! Aquí irá el master prompt.
+        instructions=MASTER_PROMPT,
         input=[
             {
                 "role": "user",
