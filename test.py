@@ -14,7 +14,7 @@ def load_workers_from_json(filepath: str) -> list[Worker]:
 
 async def load_workers_from_db() -> list[Worker]:
     db = get_db()
-    data = await db.workers.find().to_list(1000)
+    data = await db.tecnicos.find().to_list(1000)
     return [Worker(**w) for w in data]
 
 
