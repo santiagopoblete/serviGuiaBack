@@ -1,9 +1,10 @@
 import random
-from classes.weight_classes import Worker
+import asyncio
+import json
 
-class UserNeeds:
-    user_expertise: float = 0.0
-    user_price_range: tuple[int, int] = (0, 0)
+from database import get_db
+from classes.weight_classes import Worker
+from classes.chat_classes import UserNeeds
 
 
 def calculate_worker_score(worker: Worker, user_needs: UserNeeds) -> float:
@@ -49,49 +50,56 @@ def calculate_worker_score(worker: Worker, user_needs: UserNeeds) -> float:
     else:
         pricing_score += 1.0
 
+    # If worker has subcategory matching user needs, boost score
+    if user_needs.subcategory:
+        full_subcat = f"{user_needs.category}.{user_needs.subcategory}"
+        if full_subcat in worker.categories:
+            expertise_score += 2.5
+
+
     # Combine scores
-    score += expertise_score / 10.0 - user_needs.user_expertise
+    score += expertise_score / 10.0 - user_needs.user_expected_expertise
     score = max(score, 0.0)
     score += pricing_score
     score = min(score, 10.0)
+    score = round(score, 2)
 
     return score
 
+def load_workers_from_json(filepath: str) -> list[Worker]:
+    with open(filepath, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return [Worker(**w) for w in data]
 
-# Example usage
-user_needs = UserNeeds()
-user_needs.user_expertise = 4.0
-user_needs.user_price_range = (800, 1000)
+async def load_workers_from_db() -> list[Worker]:
+    db = get_db()
+    data = await db.trabajadores.find().to_list(1000)
+    return [Worker(**w) for w in data]
 
-workers = []
-workers_scores = []
+def filter_by_category(workers: list[Worker], category: str) -> list[Worker]:
+    return [
+        w for w in workers
+        if any(c == category or c.startswith(f"{category}.") for c in w.categories)
+    ]
 
-for i in range(25):
-    worker = Worker(
-        id=f"t{i+1:03}",
-        name=f"Worker {i+1}",
-        categories=["electricidad"],
-        global_rating=round(random.uniform(0.0, 5.0), 2),
-        badges=random.sample(
-            ["top_experience", "always_on_time", "certified", "formal_worker"],
-            k=random.randint(0, 3)
-        ),
-        available=True,
-        price_from=random.randint(400, 1250),
-        price_to=random.randint(650, 2500),
-        total_reviews=random.randint(0, 150),
-    )
-    workers.append(worker)
-    workers_scores.append(calculate_worker_score(worker, user_needs))
+def rank_workers(workers: list[Worker], user_needs: UserNeeds) -> list[tuple[Worker, float]]:
+    scored = [(w.id, calculate_worker_score(w, user_needs)) for w in workers]
+    scored.sort(key=lambda x: x[1], reverse=True)
+    print(f"Scored workers: {scored}")
+    return scored
 
-workers_with_scores = list(zip(workers, workers_scores))
-workers_with_scores.sort(key=lambda x: x[1], reverse=True)
+def output_workers(
+    workers: list[Worker],
+    category: str,
+    expertise: float,
+    budget: tuple[int, int],
+) -> dict:
+    user_needs = UserNeeds()
+    user_needs.user_expected_expertise = expertise
+    user_needs.user_price_range = budget
+    user_needs.category = category
 
-for i, (worker, score) in enumerate(workers_with_scores):
-    print(
-        f"#{i+1} {worker.name} | "
-        f"rating: {worker.global_rating} ({worker.total_reviews} reviews) | "
-        f"badges: {len(worker.badges)} | "
-        f"price: {worker.price_from}-{worker.price_to} | "
-        f"score: {score:.2f}"
-    )
+    filtered = filter_by_category(workers, category)
+    ranked = rank_workers(filtered, user_needs)
+
+    return ranked[:3]
