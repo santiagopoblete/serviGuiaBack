@@ -1,8 +1,8 @@
 # test_filter_and_score.py
 import asyncio
 import json
-from classes import Worker
-from weighing_v2 import calculate_worker_score, UserNeeds
+from classes.weight_classes import Worker
+from functions.weight_functions import calculate_worker_score, UserNeeds
 from database import get_db
 
 

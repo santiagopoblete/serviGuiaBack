@@ -1,5 +1,5 @@
 import random
-from classes import Worker
+from classes.weight_classes import Worker
 
 class UserNeeds:
     user_expertise: float = 0.0
