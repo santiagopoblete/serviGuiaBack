@@ -8,7 +8,6 @@ from openai import OpenAI
 
 from classes.chat_classes import UserInput
 from classes.chat_classes import AIResponse
-from classes.weight_classes import Worker
 from functions.chat_functions import build_content, load_master_prompt
 from functions.weight_functions import load_workers_from_db, output_workers
 from database import get_db
