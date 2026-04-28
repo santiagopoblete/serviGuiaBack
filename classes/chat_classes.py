@@ -28,6 +28,6 @@ class AIResponse(BaseModel):
     pregunta_seguimiento: str | None = None # Solo proveer si el input del usuario es ambiguo
     resumen_diagnostico: str
     numero_emergencia: str | None = None
-    pregunta_necedidades_usuario: str | None = None # Solo proveer si el input del usuario no es suficiente para entender sus necesidades (por ejemplo, si no se especifica un rango de precios o nivel de experiencia esperado)
+    pregunta_necesidades_usuario: str | None = None # Solo proveer si el input del usuario no es suficiente para entender sus necesidades (por ejemplo, si no se especifica un rango de precios o nivel de experiencia esperado)
     necesidades_usuario: UserNeeds # Este campo no será parte del output a devolver al usuario, sino que se usará internamente para el sistema de recomendación.
     proveedores_sugeridos: list[list[str],list[str]] | None = None # Lista de IDs de proveedores sugeridos, solo se proveerá después de hacer la recomendación basada en las necesidades del usuario.

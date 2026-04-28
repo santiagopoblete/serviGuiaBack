@@ -23,7 +23,10 @@ app = FastAPI()
 client = OpenAI()
 MASTER_PROMPT = load_master_prompt()
 
-limiter = Limiter(key_func=get_remote_address)
+def real_ip(request: Request):
+    return request.headers.get("X-Forwarded-For", request.client.host)
+
+limiter = Limiter(key_func=real_ip)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -54,7 +57,7 @@ async def user_question(request: Request, input: UserInput):
 
     if not response.output_parsed.es_emergencia and not (
         response.output_parsed.pregunta_seguimiento or 
-        response.output_parsed.pregunta_necedidades_usuario
+        response.output_parsed.pregunta_necesidades_usuario
     ):
         user_needs = response.output_parsed.necesidades_usuario
     
