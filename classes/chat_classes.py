@@ -3,7 +3,7 @@ from enum import Enum
 
 class Message(BaseModel):
     role: str
-    text: str
+    text: str | None = None
     image_url: str | None = None
 
 class UserInput(BaseModel):

@@ -35,26 +35,21 @@ async def read_root():
 @app.post("/chat")
 @limiter.limit("3/minute")
 async def user_question(request: Request, input: UserInput):
-    content = build_content(input)
+    content = build_content(input) # Construye la conversacion en el formato que OpenAI espera
 
     response = client.responses.parse(
         model="gpt-5-nano",
         instructions=MASTER_PROMPT,
-        input=[
-            {
-                "role": "user",
-                "content": content
-            }
-        ],
+        input=content,
         text_format=AIResponse,
     )
 
     if not response.output_parsed.es_emergencia and not (
-        response.output_parsed.pregunta_seguimiento or 
+        response.output_parsed.pregunta_seguimiento or
         response.output_parsed.pregunta_necesidades_usuario
     ):
         user_needs = response.output_parsed.necesidades_usuario
-    
+
         workers = await load_workers_from_db()
 
         filtered = output_workers(

@@ -1,26 +1,44 @@
 from classes.chat_classes import UserInput
 
-# Esta función construye el contenido de la entrada del usuario (texto e imagen)
-# en el formato que el modelo de OpenAI espera.
+# Esta función construye el contenido de la conversacion entre el usuario
+# y el asistente (texto e imagen) en el formato que el modelo de OpenAI espera.
 def build_content(input: UserInput):
-    content = []
+    conversation = []
 
-    if input.text:
-        content.append({
-            "type": "input_text",
-            "text": input.text
-        })
+    for i in range(len(input.conversacion)):
+        inp = input.conversacion[i]
+        cont = []
 
-    if input.image_url:
-        content.append({
-            "type": "input_image",
-            "image_url": input.image_url
-        })
+        if inp.role == "user":
+            if inp.text:
+                cont.append({
+                    "type": "input_text",
+                    "text": inp.text
+                })
 
-    if not content:
-        raise ValueError("Debes proporcionar al menos un texto o una imagen.")
+            if inp.image_url:
+                cont.append({
+                    "type": "input_image",
+                    "image_url": inp.image_url
+                })
 
-    return content
+            message_content = {
+                "role": inp.role,
+                "content": cont
+            }
+
+        elif inp.role == "assistant":
+            message_content = {
+                "role": inp.role,
+                "content": inp.text
+            }
+
+        if not cont:
+            raise ValueError("Debes proporcionar al menos un texto o una imagen.")
+
+        conversation.append(message_content)
+
+    return conversation
 
 def load_master_prompt():
     with open("master_prompt.txt", "r", encoding="utf-8") as file:
