@@ -1,13 +1,8 @@
-import os 
-import asyncio
-import json
-
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from openai import OpenAI
 
 from slowapi import Limiter , _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -15,7 +10,6 @@ from slowapi.errors import RateLimitExceeded
 from classes.chat_classes import UserInput, AIResponse
 from functions.chat_functions import build_content, load_master_prompt
 from functions.weight_functions import load_workers_from_db, output_workers
-from database import get_db
 
 load_dotenv()
 

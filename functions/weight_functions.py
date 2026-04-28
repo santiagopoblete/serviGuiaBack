@@ -85,7 +85,6 @@ def filter_by_category(workers: list[Worker], category: str) -> list[Worker]:
 def rank_workers(workers: list[Worker], user_needs: UserNeeds) -> list[tuple[Worker, float]]:
     scored = [(w.id, calculate_worker_score(w, user_needs)) for w in workers]
     scored.sort(key=lambda x: x[1], reverse=True)
-    print(f"Scored workers: {scored}")
     return scored
 
 def output_workers(
