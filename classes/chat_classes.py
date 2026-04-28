@@ -1,9 +1,13 @@
 from pydantic import BaseModel
 from enum import Enum
 
-class UserInput(BaseModel):
+class Message(BaseModel):
+    role: str
     text: str
-    image_url: str
+    image_url: str | None = None
+
+class UserInput(BaseModel):
+    conversacion: list[Message]
 
 class UrgencyLevel(str, Enum):
     CRITICO = "CRÍTICO"
