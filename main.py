@@ -33,7 +33,7 @@ async def read_root():
 
 
 @app.post("/chat")
-@limiter.limit("3/minute")
+@limiter.limit("5/minute")
 async def user_question(request: Request, input: UserInput):
     content = build_content(input) # Construye la conversacion en el formato que OpenAI espera
 

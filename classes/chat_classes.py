@@ -1,8 +1,12 @@
 from pydantic import BaseModel
 from enum import Enum
 
+class Role(str, Enum):
+    user = "user"
+    assistant = "assistant"
+
 class Message(BaseModel):
-    role: str
+    role: Role
     text: str | None = None
     image_url: str | None = None
 
