@@ -33,7 +33,7 @@ def build_content(input: UserInput):
                 "content": inp.text
             }
 
-        if not cont:
+        if not message_content.get("content"):
             raise ValueError("Debes proporcionar al menos un texto o una imagen.")
 
         conversation.append(message_content)
