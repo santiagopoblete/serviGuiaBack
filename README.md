@@ -26,7 +26,11 @@ source .venv/bin/activate
 
 ### Crear .env
 En el folder raíz de tu proyecto, crear un archivo .env. Dentro de este archivo incluir lo siguiente:
-`OPENAI_API_KEY=stringDeAPIkey`
+```
+OPENAI_API_KEY=stringDeAPIkey
+DB_NAME=nombreDeBaseDeDatos
+MONGO_URL=URLaMongoConUsuarioYConstraseña
+```
 
 ### Adjuntar master_prompt.txt
 En el folder raíz de tu proyecto, subir el archivo master_prompt.txt compartido contigo. Este archivo incluye el comportamiento deseado del modelo de IA.
