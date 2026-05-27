@@ -11,11 +11,26 @@ from classes.chat_classes import UserInput, AIResponse
 from functions.chat_functions import build_content, load_master_prompt
 from functions.weight_functions import load_workers_from_db, output_workers
 
+from fastapi.middleware.cors import CORSMiddleware
+
+
 load_dotenv()
 
 app = FastAPI()
 client = OpenAI()
 MASTER_PROMPT = load_master_prompt()
+
+origins = [
+  "http://localhost:3000"
+]
+
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=origins,        # use ["*"] only for testing
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
 
 def real_ip(request: Request):
     return request.headers.get("X-Forwarded-For", request.client.host)
