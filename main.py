@@ -10,6 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from classes.chat_classes import UserInput, AIResponse
 from functions.chat_functions import build_content, load_master_prompt
 from functions.weight_functions import load_workers_from_db, output_workers
+from routers.conversation_images import router as conversation_images_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -18,7 +19,7 @@ load_dotenv()
 
 app = FastAPI()
 client = OpenAI()
-MASTER_PROMPT = load_master_prompt()
+MASTER_PROMPT = None
 
 origins = [
   "http://localhost:3000"
@@ -40,6 +41,7 @@ limiter = Limiter(key_func=real_ip)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+app.include_router(conversation_images_router)
 
 
 @app.get("/")
@@ -50,6 +52,10 @@ async def read_root():
 @app.post("/chat")
 @limiter.limit("5/minute")
 async def user_question(request: Request, input: UserInput):
+    global MASTER_PROMPT
+    if MASTER_PROMPT is None:
+        MASTER_PROMPT = load_master_prompt()
+
     content = build_content(input) # Construye la conversacion en el formato que OpenAI espera
 
     response = client.responses.parse(

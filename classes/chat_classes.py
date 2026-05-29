@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from enum import Enum
+from typing import Optional
 
 class Role(str, Enum):
     user = "user"
@@ -7,8 +8,8 @@ class Role(str, Enum):
 
 class Message(BaseModel):
     role: Role
-    text: str | None = None
-    image_url: str | None = None
+    text: Optional[str] = None
+    image_url: Optional[str] = None
 
 class UserInput(BaseModel):
     conversacion: list[Message]
@@ -31,11 +32,11 @@ class UserNeeds(BaseModel):
 class AIResponse(BaseModel):
     nivel_urgencia: UrgencyLevel
     es_emergencia: bool
-    accion_inmediata: str | None = None # Solo proveer si la urgencia es crítica o moderada
-    categoria_detectada: str | None = None # Es necesario poner las categorías disponibles
-    pregunta_seguimiento: str | None = None # Solo proveer si el input del usuario es ambiguo
+    accion_inmediata: Optional[str] = None # Solo proveer si la urgencia es crítica o moderada
+    categoria_detectada: Optional[str] = None # Es necesario poner las categorías disponibles
+    pregunta_seguimiento: Optional[str] = None # Solo proveer si el input del usuario es ambiguo
     resumen_diagnostico: str
-    numero_emergencia: str | None = None
-    pregunta_necesidades_usuario: str | None = None # Solo proveer si el input del usuario no es suficiente para entender sus necesidades (por ejemplo, si no se especifica un rango de precios o nivel de experiencia esperado)
+    numero_emergencia: Optional[str] = None
+    pregunta_necesidades_usuario: Optional[str] = None # Solo proveer si el input del usuario no es suficiente para entender sus necesidades (por ejemplo, si no se especifica un rango de precios o nivel de experiencia esperado)
     necesidades_usuario: UserNeeds # Este campo no será parte del output a devolver al usuario, sino que se usará internamente para el sistema de recomendación.
-    proveedores_sugeridos: list[list[str],list[str]] | None = None # Lista de IDs de proveedores sugeridos, solo se proveerá después de hacer la recomendación basada en las necesidades del usuario.
+    proveedores_sugeridos: Optional[list[list[str]]] = None # Lista de IDs de proveedores sugeridos, solo se proveerá después de hacer la recomendación basada en las necesidades del usuario.
