@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from typing import Annotated
+from fastapi import FastAPI, Request, Header
 from openai import OpenAI
 
 from slowapi import Limiter , _rate_limit_exceeded_handler
@@ -8,20 +9,21 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 
 from classes.chat_classes import UserInput, AIResponse
+from database import get_db
 from functions.chat_functions import build_content, load_master_prompt
 from functions.weight_functions import load_workers_from_db, output_workers
 
 from fastapi.middleware.cors import CORSMiddleware
 
-
-load_dotenv()
+load_dotenv(override=True)
 
 app = FastAPI()
 client = OpenAI()
 MASTER_PROMPT = load_master_prompt()
 
 origins = [
-  "http://localhost:3000"
+  "http://localhost:3000",
+  "http://127.0.0.1:8000"
 ]
 
 app.add_middleware(
@@ -79,3 +81,24 @@ async def user_question(request: Request, input: UserInput):
         response.output_parsed.proveedores_sugeridos = None
 
     return response.output_parsed
+
+# Endpoint para obtener los mensajes de una conversación específica.
+@app.get("/chat/{conv_id}")
+async def get_conversation(request:Request, conv_id: int, id_usuario: Annotated[int, Header()]):
+    db = get_db()
+    id_u = id_usuario #! Asumiendo que el ID del usuario se envía en el header como "id-usuario" (hace falta saber cómo se encriptará para desencriptar correctamente)
+    data = await db.conversaciones.find_one(
+        {
+            "id_usuario": id_u,
+            "conversaciones.id": conv_id
+        },
+        {
+            "_id": 0,
+            "conversaciones.$": 1
+        }
+    )
+    #! Estoy asumiendo que "conversaciones" es el nombre de la coleccion y tiene un array de "conversaciones" dentro, cada elemento con un id llamado id y un array de mensajes.
+    if data:
+        return data["conversaciones"][0]["mensajes"]  # Devuelve los mensajes de la conversación encontrada
+    else:
+        return {"error": "Conversación no encontrada"}
