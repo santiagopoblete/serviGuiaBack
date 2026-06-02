@@ -53,63 +53,8 @@ async def read_root():
     return {"ServiGuia x Equipo de Cuatro"}
 
 
-@app.post("/chat")
-@limiter.limit("5/minute")
-async def user_question(request: Request, input: UserInput):
-    content = build_content(input) # Construye la conversacion en el formato que OpenAI espera
-
-    response = client.responses.parse(
-        model="gpt-5-nano",
-        instructions=MASTER_PROMPT,
-        input=content,
-        text_format=AIResponse,
-    )
-
-    if not response.output_parsed.es_emergencia and not (
-        response.output_parsed.pregunta_seguimiento or
-        response.output_parsed.pregunta_necesidades_usuario
-    ):
-        user_needs = response.output_parsed.necesidades_usuario
-
-        workers = await load_workers_from_db()
-
-        filtered = output_workers(
-            workers,
-            user_needs.category,
-            user_needs.user_expected_expertise,
-            (user_needs.user_price_range.min, user_needs.user_price_range.max)
-        )
-
-        response.output_parsed.proveedores_sugeridos = filtered
-    else:
-        response.output_parsed.proveedores_sugeridos = None
-
-    return response.output_parsed
-
-# Endpoint para obtener los mensajes de una conversación específica.
-@app.get("/chat/{conv_id}")
-@limiter.limit("5/minute")
-async def get_conversation(request:Request, conv_id: int, id_usuario: Annotated[int, Header()]):
-    db = get_db()
-    id_u = id_usuario #! Asumiendo que el ID del usuario se envía en el header como "id-usuario" (hace falta saber cómo se encriptará para desencriptar correctamente)
-    data = await db.conversaciones.find_one(
-        {
-            "id_usuario": id_u, #! Cambiar a ObjectId(id_u) si decidimos que el ID del usuario es un ObjectId en conversaciones
-            "conversaciones.id": conv_id
-        },
-        {
-            "_id": 0,
-            "id_usuario": 0,
-            "conversaciones.$": 1
-        }
-    )
-    #! Estoy asumiendo que "conversaciones" es el nombre de la coleccion y tiene un array de "conversaciones" dentro, cada elemento con un id llamado id y un array de mensajes.
-    if data:
-        return data["conversaciones"][0]["mensajes"]  # Devuelve los mensajes de la conversación encontrada
-    else:
-        return {"error": "Conversación no encontrada"}
-
-
+# Endpoint del flujo principal.
+# Recibe un mensaje del usuario, llama al servicio de IA, se actualiza la base de datos y da respuesta al usuario.
 @app.post("/chat/{conv_id}")
 @limiter.limit("5/minute")
 async def post_message(request:Request, conv_id: int, input: UserMessage, id_usuario: Annotated[int, Header()]):
@@ -123,7 +68,6 @@ async def post_message(request:Request, conv_id: int, input: UserMessage, id_usu
 
     # Si el usuario ya tiene conversaciones, checa que la conversación a la que se le quiere agregar el mensaje existe
     if await db.conversaciones.count_documents({"id_usuario": id_u, "conversaciones.id": conv_id}, limit=1):
-        print("La conversación ya existe, se le agregará el mensaje nuevo.")
         updated_doc = await db.conversaciones.find_one_and_update(
             {
                 "id_usuario": id_u, #! Cambiar a ObjectId(id_u) si decidimos que el ID del usuario es un ObjectId en conversaciones
@@ -145,7 +89,6 @@ async def post_message(request:Request, conv_id: int, input: UserMessage, id_usu
         content = build_content({"conversacion": conversation["mensajes"]})
 
     elif await db.conversaciones.count_documents({"id_usuario": id_u}, limit=1):
-        print("La conversación se creará y se le agregará el mensaje nuevo.")
         update = await db.conversaciones.update_one(
             {
                 "id_usuario": id_u #! Cambiar a ObjectId(id_u) si decidimos que el ID del usuario es un ObjectId en conversaciones
@@ -163,7 +106,6 @@ async def post_message(request:Request, conv_id: int, input: UserMessage, id_usu
         content = build_content({"conversacion": [input]})
 
     else:
-        print("El usuario no tiene conversaciones, se creará la conversación y se le agregará el mensaje nuevo.")
         insert = await db.conversaciones.insert_one(
             {
                 "id_usuario": id_u, #! Cambiar a ObjectId(id_u) si decidimos que el ID del usuario es un ObjectId en conversaciones
@@ -217,8 +159,6 @@ async def post_message(request:Request, conv_id: int, input: UserMessage, id_usu
             role="assistant",
             text=response.output_parsed.resumen_diagnostico + " " + response.output_parsed.pregunta_necesidades_usuario)
     else:
-        print(response.output_parsed.proveedores_sugeridos)
-        print(type(response.output_parsed.proveedores_sugeridos))
         output_ia = AssistantMessage(
             role="assistant",
             text=response.output_parsed.resumen_diagnostico,
@@ -239,8 +179,46 @@ async def post_message(request:Request, conv_id: int, input: UserMessage, id_usu
 
     return response.output_parsed
 
-# Endpoint para obtener los mensajes de una conversación específica.
+# Endpoint para obtener todas las conversaciones de un usuario.
+@app.get("/chat")
+@limiter.limit("5/minute")
+async def get_all_conversation_from_user(request:Request, id_usuario: Annotated[int, Header()]):
+    db = get_db()
+    id_u = id_usuario #! Asumiendo que el ID del usuario se envía en el header como "id-usuario" (hace falta saber cómo se encriptará para desencriptar correctamente)
+    data = await db.conversaciones.find_one(
+        {
+            "id_usuario": id_u #! Cambiar a ObjectId(id_u) si decidimos que el ID del usuario es un ObjectId en conversaciones
+        },
+        {
+            "_id": 0,
+            "id_usuario": 0
+        }
+    )
+    #! Estoy asumiendo que "conversaciones" es el nombre de la coleccion y tiene un array de "conversaciones" dentro, cada elemento con un id llamado id y un array de mensajes.
+    if data:
+        return data["conversaciones"]  # Devuelve todas las conversaciones del usuario encontrado
+    else:
+        return []
+
+# Endpoint para obtener los mensajes de una conversación específica de un usuario.
 @app.get("/chat/{conv_id}")
 @limiter.limit("5/minute")
-async def get_all_conversation_from_user(request:Request, conv_id: int, id_usuario: Annotated[int, Header()]):
-    return "Hola"
+async def get_conversation(request:Request, conv_id: int, id_usuario: Annotated[int, Header()]):
+    db = get_db()
+    id_u = id_usuario #! Asumiendo que el ID del usuario se envía en el header como "id-usuario" (hace falta saber cómo se encriptará para desencriptar correctamente)
+    data = await db.conversaciones.find_one(
+        {
+            "id_usuario": id_u, #! Cambiar a ObjectId(id_u) si decidimos que el ID del usuario es un ObjectId en conversaciones
+            "conversaciones.id": conv_id
+        },
+        {
+            "conversaciones.$": 1
+        }
+    )
+    #! Estoy asumiendo que "conversaciones" es el nombre de la coleccion y tiene un array de "conversaciones" dentro, cada elemento con un id llamado id y un array de mensajes.
+    if data:
+        return data["conversaciones"][0]["mensajes"]  # Devuelve los mensajes de la conversación encontrada
+    else:
+        return {"error": "Conversación no encontrada"}
+
+#? Maybe endpoint para eliminar conversación
