@@ -1,17 +1,19 @@
 from pydantic import BaseModel
 from enum import Enum
+from typing import Literal
 
-class Role(str, Enum):
-    user = "user"
-    assistant = "assistant"
-
-class Message(BaseModel):
-    role: Role
+class UserMessage(BaseModel):
+    role: Literal["user"]
     text: str | None = None
     image_url: str | None = None
 
+class AssistantMessage(BaseModel):
+    role: Literal["assistant"]
+    text: str
+    providers: list[tuple[str, float]] | None = None
+
 class UserInput(BaseModel):
-    conversacion: list[Message]
+    conversacion: list[UserMessage | AssistantMessage]
 
 class UrgencyLevel(str, Enum):
     CRITICO = "CRÍTICO"

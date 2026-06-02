@@ -1,42 +1,38 @@
-from classes.chat_classes import UserInput
+from classes.chat_classes import AssistantMessage, UserMessage, UserInput
 
 # Esta función construye el contenido de la conversacion entre el usuario
 # y el asistente (texto e imagen) en el formato que el modelo de OpenAI espera.
 def build_content(input: UserInput):
+    obj = UserInput.model_validate(input)
     conversation = []
 
-    for i in range(len(input["conversacion"])):
-        inp = input["conversacion"][i]
-        cont = []
+    for msg in obj.conversacion:
 
-        if inp["role"] == "user":
-            if inp["text"]:
-                cont.append({
+        if isinstance(msg, UserMessage):
+            content = []
+
+            if msg.text:
+                content.append({
                     "type": "input_text",
-                    "text": inp["text"]
+                    "text": msg.text
                 })
 
-            if inp["image_url"]:
-                cont.append({
+            if msg.image_url:
+                content.append({
                     "type": "input_image",
-                    "image_url": inp["image_url"]
+                    "image_url": msg.image_url
                 })
 
-            message_content = {
-                "role": inp["role"],
-                "content": cont
-            }
+            conversation.append({
+                "role": "user",
+                "content": content
+            })
 
-        elif inp["role"] == "assistant":
-            message_content = {
-                "role": inp["role"],
-                "content": inp["text"]
-            }
-
-        if not message_content.get("content"):
-            raise ValueError("Debes proporcionar al menos un texto o una imagen.")
-
-        conversation.append(message_content)
+        elif isinstance(msg, AssistantMessage):
+            conversation.append({
+                "role": "assistant",
+                "content": msg.text
+            })
 
     return conversation
 

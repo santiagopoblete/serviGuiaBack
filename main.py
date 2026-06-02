@@ -12,7 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 
-from classes.chat_classes import UserInput, AIResponse, Message
+from classes.chat_classes import UserInput, AIResponse, UserMessage, AssistantMessage
 from database import get_db
 from functions.chat_functions import build_content, load_master_prompt
 from functions.weight_functions import load_workers_from_db, output_workers
@@ -112,7 +112,7 @@ async def get_conversation(request:Request, conv_id: int, id_usuario: Annotated[
 
 @app.post("/chat/{conv_id}")
 @limiter.limit("5/minute")
-async def post_message(request:Request, conv_id: int, input: Message, id_usuario: Annotated[int, Header()]):
+async def post_message(request:Request, conv_id: int, input: UserMessage, id_usuario: Annotated[int, Header()]):
     db = get_db()
     id_u = id_usuario #! Asumiendo que el ID del usuario se envía en el header como "id-usuario" (hace falta saber cómo se encriptará para desencriptar correctamente)
 
@@ -141,7 +141,6 @@ async def post_message(request:Request, conv_id: int, input: Message, id_usuario
             c for c in updated_doc["conversaciones"]
             if c["id"] == conv_id
         )
-        print(conversation["mensajes"])
 
         content = build_content({"conversacion": conversation["mensajes"]})
 
@@ -161,11 +160,7 @@ async def post_message(request:Request, conv_id: int, input: Message, id_usuario
             }
         )
 
-        message = input.model_dump()
-        message["role"] = str(input.role).split('.', 1)[1]
-        print(message)
-
-        content = build_content({"conversacion": [message]})
+        content = build_content({"conversacion": [input]})
 
     else:
         print("El usuario no tiene conversaciones, se creará la conversación y se le agregará el mensaje nuevo.")
@@ -181,11 +176,7 @@ async def post_message(request:Request, conv_id: int, input: Message, id_usuario
             }
         )
 
-        message = input.model_dump()
-        message["role"] = str(input.role).split('.', 1)[1]
-        print(message)
-
-        content = build_content({"conversacion": [message]})
+        content = build_content({"conversacion": [input]})
 
     response = client.responses.parse(
         model="gpt-5-nano",
@@ -214,21 +205,24 @@ async def post_message(request:Request, conv_id: int, input: Message, id_usuario
         response.output_parsed.proveedores_sugeridos = None
 
     if response.output_parsed.es_emergencia:
-        output_ia = Message(
+        output_ia = AssistantMessage(
             role="assistant",
             text=response.output_parsed.accion_inmediata)
     elif response.output_parsed.pregunta_seguimiento:
-        output_ia = Message(
+        output_ia = AssistantMessage(
             role="assistant",
             text=response.output_parsed.resumen_diagnostico + " " + response.output_parsed.pregunta_seguimiento)
     elif response.output_parsed.pregunta_necesidades_usuario:
-        output_ia = Message(
+        output_ia = AssistantMessage(
             role="assistant",
             text=response.output_parsed.resumen_diagnostico + " " + response.output_parsed.pregunta_necesidades_usuario)
     else:
-        output_ia = Message(
+        print(response.output_parsed.proveedores_sugeridos)
+        print(type(response.output_parsed.proveedores_sugeridos))
+        output_ia = AssistantMessage(
             role="assistant",
-            text=response.output_parsed.resumen_diagnostico)
+            text=response.output_parsed.resumen_diagnostico,
+            providers=response.output_parsed.proveedores_sugeridos)
 
     update_ia = await db.conversaciones.update_one(
             {
@@ -245,3 +239,8 @@ async def post_message(request:Request, conv_id: int, input: Message, id_usuario
 
     return response.output_parsed
 
+# Endpoint para obtener los mensajes de una conversación específica.
+@app.get("/chat/{conv_id}")
+@limiter.limit("5/minute")
+async def get_all_conversation_from_user(request:Request, conv_id: int, id_usuario: Annotated[int, Header()]):
+    return "Hola"
