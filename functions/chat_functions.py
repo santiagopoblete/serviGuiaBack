@@ -5,32 +5,32 @@ from classes.chat_classes import UserInput
 def build_content(input: UserInput):
     conversation = []
 
-    for i in range(len(input.conversacion)):
-        inp = input.conversacion[i]
+    for i in range(len(input["conversacion"])):
+        inp = input["conversacion"][i]
         cont = []
 
-        if inp.role == "user":
-            if inp.text:
+        if inp["role"] == "user":
+            if inp["text"]:
                 cont.append({
                     "type": "input_text",
-                    "text": inp.text
+                    "text": inp["text"]
                 })
 
-            if inp.image_url:
+            if inp["image_url"]:
                 cont.append({
                     "type": "input_image",
-                    "image_url": inp.image_url
+                    "image_url": inp["image_url"]
                 })
 
             message_content = {
-                "role": inp.role,
+                "role": inp["role"],
                 "content": cont
             }
 
-        elif inp.role == "assistant":
+        elif inp["role"] == "assistant":
             message_content = {
-                "role": inp.role,
-                "content": inp.text
+                "role": inp["role"],
+                "content": inp["text"]
             }
 
         if not message_content.get("content"):
