@@ -58,6 +58,10 @@ async def read_root():
 @app.post("/chat/{conv_id}")
 @limiter.limit("5/minute")
 async def post_message(request:Request, conv_id: int, input: UserMessage, id_usuario: Annotated[int, Header()]):
+
+    if(not input.text and not input.image_url):
+        return {"error": "El mensaje del usuario no contiene ni texto ni imagen."}
+
     db = get_db()
     id_u = id_usuario #! Asumiendo que el ID del usuario se envía en el header como "id-usuario" (hace falta saber cómo se encriptará para desencriptar correctamente)
 
