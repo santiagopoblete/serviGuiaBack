@@ -11,6 +11,7 @@ from classes.chat_classes import UserInput, AIResponse
 from functions.chat_functions import build_content, load_master_prompt
 from functions.weight_functions import load_workers_from_db, output_workers
 from routers.conversation_images import router as conversation_images_router
+from routers.upload import router as upload_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -42,6 +43,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 app.include_router(conversation_images_router)
+app.include_router(upload_router)
 
 
 @app.get("/")
