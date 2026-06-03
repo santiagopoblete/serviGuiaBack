@@ -1,5 +1,3 @@
-import json
-
 from dotenv import load_dotenv
 from typing import Annotated
 from fastapi import FastAPI, Request, Header
@@ -12,10 +10,12 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 
-from classes.chat_classes import UserInput, AIResponse, UserMessage, AssistantMessage
+from classes.chat_classes import AIResponse, UserMessage, AssistantMessage
 from database import get_db
 from functions.chat_functions import build_content, load_master_prompt
 from functions.weight_functions import load_workers_from_db, output_workers
+from routers.conversation_images import router as conversation_images_router
+from routers.upload import router as upload_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,7 +23,7 @@ load_dotenv(override=True)
 
 app = FastAPI()
 client = OpenAI()
-MASTER_PROMPT = load_master_prompt()
+MASTER_PROMPT = None
 
 origins = [
   "http://localhost:3000",
@@ -46,6 +46,8 @@ limiter = Limiter(key_func=real_ip)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+app.include_router(conversation_images_router)
+app.include_router(upload_router)
 
 
 @app.get("/")
@@ -62,13 +64,17 @@ async def post_message(request:Request, conv_id: int, input: UserMessage, id_usu
     if(not input.text and not input.image_url):
         return {"error": "El mensaje del usuario no contiene ni texto ni imagen."}
 
+    global MASTER_PROMPT
+    if MASTER_PROMPT is None:
+        MASTER_PROMPT = load_master_prompt()
+
     db = get_db()
     id_u = id_usuario #! Asumiendo que el ID del usuario se envía en el header como "id-usuario" (hace falta saber cómo se encriptará para desencriptar correctamente)
 
-    # # Checa que el usuario existe primero
-    # usuario_existe = await db.usuarios.find_one({"_id": ObjectId(id_u)})
-    # if not usuario_existe:
-    #     return {"error": "Usuario no encontrado"}
+    # Checa que el usuario existe primero
+    usuario_existe = await db.usuarios.find_one({"id_usuario": id_u}) #! Asumiendo que el ID que se pasa es el número. Puede cambiar a ObjectId(id_u).
+    if not usuario_existe:
+        return {"error": "Usuario no encontrado"}
 
     # Si el usuario ya tiene conversaciones, checa que la conversación a la que se le quiere agregar el mensaje existe
     if await db.conversaciones.count_documents({"id_usuario": id_u, "conversaciones.id": conv_id}, limit=1):
