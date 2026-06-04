@@ -240,4 +240,36 @@ async def get_conversation(request:Request, conv_id: int, id_usuario: Annotated[
     else:
         return {"error": "Conversación no encontrada"}
 
-#? Maybe endpoint para eliminar conversación
+# Endpoint para eliminar una conversación específica de un usuario.
+@app.delete("/chat/{conv_id}")
+@limiter.limit("5/minute")
+async def delete_conversation(request:Request, conv_id: int, id_usuario: Annotated[str, Header()]):
+    db = get_db()
+    try:
+        id_u = ObjectId(id_usuario)
+    except Exception as e:
+        return {"error": "ID de usuario inválido"}
+
+    # Checa que el usuario existe primero
+    usuario_existe = await db.usuarios.find_one({"_id": id_u})
+    if not usuario_existe:
+        return {"error": "Usuario no encontrado"}
+
+    result = await db.conversaciones.update_one(
+        {
+            "id_usuario": id_u,
+            "conversaciones.id": conv_id
+        },
+        {
+            "$pull": {
+                "conversaciones": {
+                    "id": conv_id
+                }
+            }
+        }
+    )
+
+    if result.modified_count > 0:
+        return {"message": "Conversación eliminada exitosamente"}
+    else:
+        return {"error": "Conversación no encontrada o ya eliminada"}
