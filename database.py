@@ -7,8 +7,11 @@ load_dotenv()
 MONGO_URL = os.getenv("MONGO_URL")
 DB_NAME = os.getenv("DB_NAME")
 
-client = AsyncIOMotorClient(MONGO_URL)
+client = AsyncIOMotorClient(MONGO_URL, serverSelectionTimeoutMS=10000)
 db = client[DB_NAME]
 
 def get_db():
     return db
+
+async def ping_db():
+    return await client.admin.command("ping")

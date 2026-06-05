@@ -44,7 +44,7 @@ app.add_middleware(SlowAPIMiddleware)
 
 @app.get("/")
 async def read_root():
-    return {"ServiGuia x Equipo de Cuatro"}
+    return {"message": "ServiGuia x Equipo de Cuatro"}
 
 
 @app.post("/chat")
