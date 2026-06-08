@@ -41,14 +41,23 @@ jobs:
 
       # 3. Authenticate with Atlas and append the Runner's IP to the firewall whitelist
       - name: Authorize Runner IP in Atlas
+        env:
+          MONGODB_ATLAS_PUBLIC_API_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
+          MONGODB_ATLAS_PRIVATE_API_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
         run: |
-          atlas auth login --public-key ${{ secrets.ATLAS_PUBLIC_KEY }} --private-key ${{ secrets.ATLAS_PRIVATE_KEY }}
+          atlas config set silence_storage_warning true
+
+          # Directly run the creation command (No 'atlas auth login' required!)
           atlas security network accessList create $RUNNER_IP --comment "Temporary GitHub Runner" --projectId ${{ secrets.ATLAS_PROJECT_ID }}
-          # Give Atlas 15 seconds to propagate the new firewall rule across clusters
+
+          # Give Atlas 15 seconds to apply the firewall rules across its nodes
           sleep 15
 
       # no tests yet
       - name: Run tests
+        env:
+          MONGO_URL: ${{ secrets.MONGO_URL }}
+          DB_NAME: ${{ secrets.DB_NAME }}
         run: python -m pytest -v
 
       - name: Remove Runner IP from Atlas Firewall
