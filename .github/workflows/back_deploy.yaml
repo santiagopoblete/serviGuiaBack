@@ -49,7 +49,7 @@ jobs:
                 "ipAddress":"${{ steps.ip.outputs.IP }}",
                 "comment":"GitHub Actions"
               }]' \
-              "https://cloud.mongodb.com/api/atlas/v2/groups/${{ secrets.ATLAS_PROJECT_ID }}/accessList"
+              "https://cloud.mongodb.com/api/atlas/v2/groups/${{ secrets.ATLAS_PROJECT_ID }}/accessList" \
               > /dev/null
 
       - name: Wait for whitelist propagation
