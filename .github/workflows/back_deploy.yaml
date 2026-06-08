@@ -1,10 +1,10 @@
-name: 'Serviapp Backend Staging Branch CI/CD'
+name: 'Serviapp Backend CI/CD'
 
 on:
   push:
-    branches: [ staging ]
+    branches: [ main, staging ]
   pull_request:
-    branches: [ staging ]
+    branches: [ main, staging ]
 
 jobs:
   build:
@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
             python-version: '3.14'    # current version being used
-            cache: 'pip'                # speeds up dependency installation by caching pip packages
+            cache: 'pip'              # speeds up dependency installation by caching pip packages
             cache-dependency-path: requirements.txt
 
       - name: Install dependencies
@@ -34,10 +34,11 @@ jobs:
     name: Deploy to Render
     needs: build
     runs-on: ubuntu-latest
+
     steps:
       - name: Deploy to Render
-        uses: johnbeynon/render-deploy-action@v0.0.8
+        uses: johnbeynon/render-deploy-action@747373cdb7b9b3f561438e063ee0815b71584f1b
         with:
           api-key: ${{ secrets.RENDER_API_KEY }}
-          service-id: ${{ secrets.RENDER_SERVICE_ID_STAGING }}
+          service-id: ${{ github.ref_name == 'main' && secrets.RENDER_SERVICE_ID_MAIN || secrets.RENDER_SERVICE_ID_STAGING }}
           wait-for-success: true
