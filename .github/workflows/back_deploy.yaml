@@ -34,7 +34,8 @@ jobs:
 
       - name: Get Runner Public IP
         id: ip
-        run: echo "RUNNER_IP=$(curl -s https://checkip.amazonaws.com)" >> $GITHUB_ENV
+        run: |
+          echo "IP=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
 
       # # 2. Download and install the MongoDB Atlas CLI tool
       # - name: Setup Atlas CLI
