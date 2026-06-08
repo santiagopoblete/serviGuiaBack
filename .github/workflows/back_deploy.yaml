@@ -26,9 +26,38 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Create .env
+        run: |
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "MONGO_URL=${{ secrets.MONGO_URL }}" >> .env
+
+      - name: Get Runner Public IP
+        id: ip
+        run: echo "RUNNER_IP=$(curl -s https://checkip.amazonaws.com)" >> $GITHUB_ENV
+
+      # 2. Download and install the MongoDB Atlas CLI tool
+      - name: Install Atlas CLI
+        run: |
+          curl -ok atlascli.deb https://fastdl.mongodb.org/mongocli/mongodb-atlas-cli_1.16.0_linux_x86_64.deb
+          sudo dpkg -i atlascli.deb
+
+      # 3. Authenticate with Atlas and append the Runner's IP to the firewall whitelist
+      - name: Authorize Runner IP in Atlas
+        run: |
+          atlas auth login --public-key ${{ secrets.ATLAS_PUBLIC_KEY }} --private-key ${{ secrets.ATLAS_PRIVATE_KEY }}
+          atlas security network accessList create $RUNNER_IP --comment "Temporary GitHub Runner" --projectId ${{ secrets.ATLAS_PROJECT_ID }}
+          # Give Atlas 15 seconds to propagate the new firewall rule across clusters
+          sleep 15
+
       # no tests yet
-      # - name: Run tests
-      #   run: python -m pytest -v
+      - name: Run tests
+        run: python -m pytest -v
+
+      - name: Remove Runner IP from Atlas Firewall
+        if: always()
+        run: |
+          atlas auth login --public-key ${{ secrets.ATLAS_PUBLIC_KEY }} --private-key ${{ secrets.ATLAS_PRIVATE_KEY }}
+          atlas security network accessList delete $RUNNER_IP --projectId ${{ secrets.ATLAS_PROJECT_ID }} --force
 
   deploy:
     name: Deploy to Render
