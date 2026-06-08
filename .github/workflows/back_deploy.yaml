@@ -50,6 +50,7 @@ jobs:
                 "comment":"GitHub Actions"
               }]' \
               "https://cloud.mongodb.com/api/atlas/v2/groups/${{ secrets.ATLAS_PROJECT_ID }}/accessList"
+              > /dev/null
 
       - name: Wait for whitelist propagation
         run: sleep 15
