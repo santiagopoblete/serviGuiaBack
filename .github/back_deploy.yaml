@@ -1,0 +1,44 @@
+name: 'Serviapp Backend CI/CD'
+
+on:
+  push:
+    branches: [ main, staging ]
+  pull_request:
+    branches: [ main, staging ]
+
+jobs:
+  build:
+    name: Build environment and test
+    runs-on: ubuntu-latest  # better to use linux than other os unless there are specific os needs
+    steps:
+      - name: Download code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+            python-version: '3.14'    # current version being used
+            cache: 'pip'              # speeds up dependency installation by caching pip packages
+            cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # no tests yet
+      # - name: Run tests
+      #   run: pytest
+
+  deploy:
+    name: Deploy to Render
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Render
+        uses: johnbeynon/render-deploy-action@747373cdb7b9b3f561438e063ee0815b71584f1b
+        with:
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          service-id: ${{ github.ref_name == 'main' && secrets.RENDER_SERVICE_ID_MAIN || secrets.RENDER_SERVICE_ID_STAGING }}
+          wait-for-success: true
