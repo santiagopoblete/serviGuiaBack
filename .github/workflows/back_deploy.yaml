@@ -48,7 +48,6 @@ jobs:
       #   run: |
       #     atlas config set silence_storage_warning true
 
-      #     # Directly run the creation command (No 'atlas auth login' required!)
       #     atlas security network accessList create $RUNNER_IP --comment "Temporary GitHub Runner" --projectId ${{ secrets.ATLAS_PROJECT_ID }}
 
       #     # Give Atlas 15 seconds to apply the firewall rules across its nodes
