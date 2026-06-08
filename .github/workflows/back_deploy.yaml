@@ -28,7 +28,7 @@ jobs:
 
       # no tests yet
       # - name: Run tests
-      #   run: pytest
+      #   run: python -m pytest -v
 
   deploy:
     name: Deploy to Render

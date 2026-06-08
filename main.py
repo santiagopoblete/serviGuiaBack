@@ -52,7 +52,7 @@ app.include_router(upload_router)
 
 @app.get("/")
 async def read_root():
-    return {"ServiGuia x Equipo de Cuatro"}
+    return {"message": "ServiGuia x Equipo de Cuatro"}
 
 
 # Endpoint del flujo principal.
