@@ -36,10 +36,8 @@ jobs:
         run: echo "RUNNER_IP=$(curl -s https://checkip.amazonaws.com)" >> $GITHUB_ENV
 
       # 2. Download and install the MongoDB Atlas CLI tool
-      - name: Install Atlas CLI
-        run: |
-          curl -ok atlascli.deb https://fastdl.mongodb.org/mongocli/mongodb-atlas-cli_1.16.0_linux_x86_64.deb
-          sudo dpkg -i atlascli.deb
+      - name: Setup Atlas CLI
+        uses: mongodb/atlas-github-action@v0.2.2
 
       # 3. Authenticate with Atlas and append the Runner's IP to the firewall whitelist
       - name: Authorize Runner IP in Atlas
