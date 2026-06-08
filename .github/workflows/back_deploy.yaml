@@ -36,9 +36,9 @@ jobs:
         id: ip
         run: echo "RUNNER_IP=$(curl -s https://checkip.amazonaws.com)" >> $GITHUB_ENV
 
-      # 2. Download and install the MongoDB Atlas CLI tool
-      - name: Setup Atlas CLI
-        uses: mongodb/atlas-github-action@v0.2.2
+      # # 2. Download and install the MongoDB Atlas CLI tool
+      # - name: Setup Atlas CLI
+      #   uses: mongodb/atlas-github-action@v0.2.2
 
       # # 3. Authenticate with Atlas and append the Runner's IP to the firewall whitelist
       # - name: Authorize Runner IP in Atlas
@@ -53,21 +53,43 @@ jobs:
       #     # Give Atlas 15 seconds to apply the firewall rules across its nodes
       #     sleep 15
 
-      # no tests yet
+      - name: Add runner IP to Atlas
+        run: |
+          curl --user "${{ secrets.ATLAS_PUBLIC_KEY }}:${{ secrets.ATLAS_PRIVATE_KEY }}" \
+              --digest \
+              --header "Content-Type: application/json" \
+              --request POST \
+              --data '[{
+                "ipAddress":"${{ steps.ip.outputs.IP }}",
+                "comment":"GitHub Actions"
+              }]' \
+              "https://cloud.mongodb.com/api/atlas/v2/groups/${{ secrets.ATLAS_PROJECT_ID }}/accessList"
+
+      - name: Wait for whitelist propagation
+        run: sleep 15
+
       - name: Run tests
         env:
           MONGO_URL: ${{ secrets.MONGO_URL }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: python -m pytest -v
 
-      # - name: Remove Runner IP from Atlas Firewall
-      #   if: always()
-      #   env:
-      #     MONGODB_ATLAS_PUBLIC_API_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
-      #     MONGODB_ATLAS_PRIVATE_API_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
-      #   run: |
-      #     atlas config set silence_storage_warning true
-      #     atlas security network accessList delete $RUNNER_IP --projectId ${{ secrets.ATLAS_PROJECT_ID }} --force
+      - name: Remove runner IP
+        if: always()
+        run: |
+          curl --user "${{ secrets.ATLAS_PUBLIC_KEY }}:${{ secrets.ATLAS_PRIVATE_KEY }}" \
+              --digest \
+              --request DELETE \
+              "https://cloud.mongodb.com/api/atlas/v2/groups/${{ secrets.ATLAS_PROJECT_ID }}/accessList/${{ steps.ip.outputs.IP }}"
+
+    # - name: Remove Runner IP from Atlas Firewall
+    #   if: always()
+    #   env:
+    #     MONGODB_ATLAS_PUBLIC_API_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
+    #     MONGODB_ATLAS_PRIVATE_API_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
+    #   run: |
+    #     atlas config set silence_storage_warning true
+    #     atlas security network accessList delete $RUNNER_IP --projectId ${{ secrets.ATLAS_PROJECT_ID }} --force
 
   deploy:
     name: Deploy to Render
