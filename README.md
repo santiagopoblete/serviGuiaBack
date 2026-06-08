@@ -24,6 +24,9 @@ source .venv/bin/activate
 ### Instalar dependencias y paquetes
 `pip install -r requirements.txt`
 
+#### Si se instalan nuevas dependencias o paquetes hacer:
+`pip freeze > requirements.txt`
+
 ### Crear .env
 En el folder raíz de tu proyecto, crear un archivo .env. Dentro de este archivo incluir lo siguiente:
 ```
