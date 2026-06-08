@@ -39,7 +39,7 @@ jobs:
 
       - name: Add runner IP to Atlas
         run: |
-          curl --fail-with-body \
+          curl --silent --fail-with-body \
               --user "${{ secrets.ATLAS_PUBLIC_KEY }}:${{ secrets.ATLAS_PRIVATE_KEY }}" \
               --digest \
               --header "Accept: application/vnd.atlas.2023-01-01+json" \
