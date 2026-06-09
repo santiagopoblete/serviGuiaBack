@@ -32,6 +32,12 @@ jobs:
           echo "MONGO_URL=${{ secrets.MONGO_URL }}" >> .env
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
 
+      - name: Recreate Master Prompt File
+        env:
+          AI_CONFIG_TXT: ${{ secrets.MASTER_PROMPT }}
+        run: |
+          printf "%s" "$AI_CONFIG_TXT" > master_prompt.txt
+
       - name: Get Runner Public IP
         id: ip
         run: |
