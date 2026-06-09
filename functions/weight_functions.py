@@ -4,8 +4,7 @@ import json
 
 from database import get_db
 from classes.weight_classes import Worker
-from classes.chat_classes import UserNeeds
-
+from classes.chat_classes import UserNeeds, PriceRange
 
 def calculate_worker_score(worker: Worker, user_needs: UserNeeds) -> float:
     expertise_score = 0.0
@@ -40,12 +39,12 @@ def calculate_worker_score(worker: Worker, user_needs: UserNeeds) -> float:
     expertise_score += len(worker.badges) * 0.5
 
     # Pricing score based on price_from / price_to vs user range
-    if worker.price_to <= user_needs.user_price_range[1]:
+    if worker.price_to <= user_needs.user_price_range.max:
         pricing_score = 1.5
     else:
         pricing_score = 1.0
 
-    if worker.price_from <= user_needs.user_price_range[0]:
+    if worker.price_from <= user_needs.user_price_range.min:
         pricing_score += 1.5
     else:
         pricing_score += 1.0
@@ -94,8 +93,14 @@ def output_workers(
     budget: tuple[int, int],
 ) -> dict:
     user_needs = UserNeeds()
+
     user_needs.user_expected_expertise = expertise
-    user_needs.user_price_range = budget
+
+    user_needs.user_price_range = PriceRange(
+        min=budget[0],
+        max=budget[1]
+    )
+
     user_needs.category = category
 
     filtered = filter_by_category(workers, category)
