@@ -1,11 +1,11 @@
 from functions.chat_functions import build_content
-from classes.chat_classes import UserInput, Message
+from classes.chat_classes import UserInput, UserMessage, AssistantMessage
 
 
 def test_build_content_text_message():
     user_input = UserInput(
         conversacion=[
-            Message(
+            UserMessage(
                 role="user",
                 text="Necesito un plomero"
             )
@@ -30,7 +30,7 @@ def test_build_content_text_message():
 def test_build_content_image_message():
     user_input = UserInput(
         conversacion=[
-            Message(
+            UserMessage(
                 role="user",
                 image_url="https://example.com/image.jpg"
             )
@@ -46,7 +46,7 @@ def test_build_content_image_message():
 def test_build_content_assistant_message():
     user_input = UserInput(
         conversacion=[
-            Message(
+            AssistantMessage(
                 role="assistant",
                 text="Hola"
             )
